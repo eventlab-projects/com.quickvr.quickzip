@@ -1,0 +1,24 @@
+{
+  "name": "com.quickvr.quickzip",
+  "version": "1.0.0",
+  "displayName": "QuickVR.QuickZip",
+  "description": "A QuickVR utility for managing zip files in Unity",
+  "unity": "2019.1",
+  "dependencies": {
+    "com.unity.inputsystem": "1.0.2",
+	"com.unity.xr.interaction.toolkit": "2.1.0-pre.1",
+	"com.unity.addressables": "1.18.19"
+  },
+  "keywords": [
+    "vr",
+    "virtual reality",
+    "oculus",
+	"oculus quest"
+  ],
+  "author": {
+    "name": "EventLab",
+    "email": "eventlab.projects@gmail.com",
+    "url": "http://www.event-lab.org/"
+  }
+  
+}

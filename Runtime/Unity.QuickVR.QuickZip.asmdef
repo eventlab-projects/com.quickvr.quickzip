@@ -1,0 +1,16 @@
+{
+    "name": "QuickZip",
+    "rootNamespace": "",
+    "references": [
+        "GUID:af948a19094c5e44cbffd24fd4a3fbee"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
