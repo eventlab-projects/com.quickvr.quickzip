@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using System.IO;
+using System.Threading;
 
 using ICSharpCode.SharpZipLib.Zip;
 using ICSharpCode.SharpZipLib.Core;
@@ -51,6 +52,18 @@ namespace QuickVR
         }
 
         /// <summary>
+        /// Creates a zip file asynchronously. 
+        /// </summary>
+        /// <param name="pathSrc"></param>
+        /// <param name="pathDst"></param>
+        /// <returns></returns>
+        public static WaitForThread CreateZipAsync(string pathSrc, string pathDst)
+        {
+            Thread thread = new Thread(()=> CreateZip(pathSrc, pathDst));
+            return new WaitForThread(thread);
+        }
+
+        /// <summary>
         /// Creates a zip file from an array of bytes. 
         /// </summary>
         /// <param name="data"></param>
@@ -66,6 +79,19 @@ namespace QuickVR
         }
 
         /// <summary>
+        /// Creates a zip file from an array of bytes asyncrhonously. 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="entryName"></param>
+        /// <param name="pathDst"></param>
+        /// <returns></returns>
+        public static WaitForThread CreateZipAsync(byte[] data, string entryName, string pathDst)
+        {
+            Thread thread = new Thread(() => CreateZip(data, entryName, pathDst));
+            return new WaitForThread(thread);
+        }
+
+        /// <summary>
         /// Creates a zip byte array from the input data. 
         /// </summary>
         /// <param name="data"></param>
@@ -75,7 +101,7 @@ namespace QuickVR
         {
             MemoryStream result = new MemoryStream();
             ZipOutputStream zipStream = new ZipOutputStream(result);
-            
+
             zipStream.SetLevel(3);
 
             ZipEntry newEntry = new ZipEntry(entryName);
@@ -85,12 +111,17 @@ namespace QuickVR
 
             StreamUtils.Copy(new MemoryStream(data), zipStream, new byte[4096]);
             zipStream.CloseEntry();
-            
+
             zipStream.IsStreamOwner = false;
             zipStream.Close();
 
             return result.ToArray();
         }
+
+        //public static byte[] CreateZipAsync(byte[] data, string entryName)
+        //{
+
+        //}
 
         /// <summary>
         /// Extracts the contents of a zip file. 
@@ -112,7 +143,7 @@ namespace QuickVR
 
             return result.ToArray();
         }
-        
+
         /// <summary>
         /// Creates a zip file from a single file. 
         /// </summary>
@@ -165,5 +196,56 @@ namespace QuickVR
     }
 
 }
+
+public class ZipJob : WaitForThread
+{
+
+    #region PROTECTED ATTRIBUTES
+
+    protected FastZip _zipManager = null;
+
+    #endregion
+
+    public ZipJob(Thread thread) : base(thread)
+    {
+        _zipManager = new FastZip();
+    }
+
+}
+
+public class WaitForThread : CustomYieldInstruction
+{
+
+    #region PUBLIC ATTRIUBTES
+
+    public override bool keepWaiting
+    {
+        get
+        {
+            return _thread.IsAlive;
+        }
+    }
+
+    #endregion
+
+    #region PROTECTED ATTRIBUTES
+
+    protected Thread _thread = null;
+
+    #endregion
+
+    #region CREATION AND DESTRUCTION
+
+    public WaitForThread(Thread thread)
+    {
+        _thread = thread;
+        _thread.Start();
+    }
+
+    #endregion
+
+}
+
+
 
 
