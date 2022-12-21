@@ -14,24 +14,6 @@ namespace QuickVR
     public static class QuickZipManager
     {
 
-        #region PRIVATE ATTRIBUTES
-
-        private static FastZip _zipManager
-        {
-            get
-            {
-                if (m_ZipManager == null)
-                {
-                    m_ZipManager = new FastZip();
-                }
-
-                return m_ZipManager;
-            }
-        }
-        private static FastZip m_ZipManager = null;
-
-        #endregion
-
         #region GET AND SET
 
         /// <summary>
@@ -118,10 +100,20 @@ namespace QuickVR
             return result.ToArray();
         }
 
-        //public static byte[] CreateZipAsync(byte[] data, string entryName)
-        //{
+        public static ZipAsyncOperation CreateZipAsync(byte[] data, string entryName)
+        {
+            ZipAsyncOperation result = new ZipAsyncOperation();
+            Thread thread = new Thread(() => CreateZipAsync(data, entryName, result));
+            thread.Start();
+            
+            return result;
+        }
 
-        //}
+        private static void CreateZipAsync(byte[] data, string entryName, ZipAsyncOperation result)
+        {
+            result._data = CreateZip(data, entryName);
+            result._isDone = true;
+        }
 
         /// <summary>
         /// Extracts the contents of a zip file. 
@@ -129,7 +121,8 @@ namespace QuickVR
         /// <param name="zipPath"></param>
         public static void ExtractZip(string zipPath, string pathDst)
         {
-            _zipManager.ExtractZip(zipPath, pathDst, null);
+            FastZip fZip = new FastZip();
+            fZip.ExtractZip(zipPath, pathDst, null);
         }
 
         public static byte[] ExtractZip(byte[] data)
@@ -174,7 +167,8 @@ namespace QuickVR
         /// <param name="pathDst"></param>
         private static void CreateZipFromDirectory(string pathSrc, string pathDst)
         {
-            _zipManager.CreateZip(pathDst, pathSrc, true, null);
+            FastZip fZip = new FastZip();
+            fZip.CreateZip(pathDst, pathSrc, true, null);
         }
 
         private static bool IsFilePath(string path)
@@ -197,19 +191,23 @@ namespace QuickVR
 
 }
 
-public class ZipJob : WaitForThread
+public class ZipAsyncOperation : CustomYieldInstruction
 {
 
-    #region PROTECTED ATTRIBUTES
+    #region PUBLIC ATTRIBUTES
 
-    protected FastZip _zipManager = null;
+    public override bool keepWaiting
+    {
+        get
+        {
+            return !_isDone;
+        }
+    }
+
+    public bool _isDone = false;
+    public byte[] _data = null;
 
     #endregion
-
-    public ZipJob(Thread thread) : base(thread)
-    {
-        _zipManager = new FastZip();
-    }
 
 }
 
