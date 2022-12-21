@@ -100,6 +100,12 @@ namespace QuickVR
             return result.ToArray();
         }
 
+        /// <summary>
+        /// Creates a zip byte array from the input data asynchronously. 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="entryName"></param>
+        /// <returns></returns>
         public static ZipAsyncOperation CreateZipAsync(byte[] data, string entryName)
         {
             ZipAsyncOperation result = new ZipAsyncOperation();
@@ -125,6 +131,17 @@ namespace QuickVR
             fZip.ExtractZip(zipPath, pathDst, null);
         }
 
+        public static WaitForThread ExtractZipAsync(string zipPath, string pathDst)
+        {
+            Thread thread = new Thread(() => ExtractZip(zipPath, pathDst));
+            return new WaitForThread(thread);
+        }
+
+        /// <summary>
+        /// Extracts the contents of a byte array representing some zip compressed data. 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
         public static byte[] ExtractZip(byte[] data)
         {
             MemoryStream result = new MemoryStream();
@@ -135,6 +152,26 @@ namespace QuickVR
             zipStream.CopyTo(result);
 
             return result.ToArray();
+        }
+
+        /// <summary>
+        /// Extracts the contents of a byte array representing some zip compressed data assyncrhonously. 
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static ZipAsyncOperation ExtractZipAsync(byte[] data)
+        {
+            ZipAsyncOperation result = new ZipAsyncOperation();
+            Thread thread = new Thread(() => ExtractZipAsync(data, result));
+            thread.Start();
+
+            return result;
+        }
+
+        private static void ExtractZipAsync(byte[] data, ZipAsyncOperation result)
+        {
+            result._data = ExtractZip(data);
+            result._isDone = true;
         }
 
         /// <summary>
