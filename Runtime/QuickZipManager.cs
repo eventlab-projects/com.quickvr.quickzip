@@ -39,10 +39,21 @@ namespace QuickVR
         /// <param name="pathSrc"></param>
         /// <param name="pathDst"></param>
         /// <returns></returns>
-        public static WaitForThread CreateZipAsync(string pathSrc, string pathDst)
+        public static ZipAsyncOperation CreateZipAsync(string pathSrc, string pathDst)
         {
-            Thread thread = new Thread(()=> CreateZip(pathSrc, pathDst));
-            return new WaitForThread(thread);
+            ZipAsyncOperation op = new ZipAsyncOperation();
+
+            Thread thread = new Thread
+            (
+                () =>
+                {
+                    CreateZip(pathSrc, pathDst);
+                    op._isDone = true;
+                }
+            );
+            thread.Start();
+
+            return op;
         }
 
         /// <summary>
@@ -67,10 +78,21 @@ namespace QuickVR
         /// <param name="entryName"></param>
         /// <param name="pathDst"></param>
         /// <returns></returns>
-        public static WaitForThread CreateZipAsync(byte[] data, string entryName, string pathDst)
+        public static ZipAsyncOperation CreateZipAsync(byte[] data, string entryName, string pathDst)
         {
-            Thread thread = new Thread(() => CreateZip(data, entryName, pathDst));
-            return new WaitForThread(thread);
+            ZipAsyncOperation op = new ZipAsyncOperation();
+
+            Thread thread = new Thread
+            (
+                () =>
+                {
+                    CreateZip(data, entryName, pathDst);
+                    op._isDone = true;
+                }
+            );
+            thread.Start();
+
+            return op;
         }
 
         /// <summary>
@@ -106,19 +128,20 @@ namespace QuickVR
         /// <param name="data"></param>
         /// <param name="entryName"></param>
         /// <returns></returns>
-        public static ZipAsyncOperation CreateZipAsync(byte[] data, string entryName)
+        public static ZipAsyncOperation<byte[]> CreateZipAsync(byte[] data, string entryName)
         {
-            ZipAsyncOperation result = new ZipAsyncOperation();
-            Thread thread = new Thread(() => CreateZipAsync(data, entryName, result));
+            ZipAsyncOperation<byte[]> op = new ZipAsyncOperation<byte[]>();
+
+            Thread thread = new Thread
+            (
+                () =>
+                {
+                    op._result = CreateZip(data, entryName);
+                }
+            );
             thread.Start();
             
-            return result;
-        }
-
-        private static void CreateZipAsync(byte[] data, string entryName, ZipAsyncOperation result)
-        {
-            result._data = CreateZip(data, entryName);
-            result._isDone = true;
+            return op;
         }
 
         /// <summary>
@@ -131,10 +154,21 @@ namespace QuickVR
             fZip.ExtractZip(zipPath, pathDst, null);
         }
 
-        public static WaitForThread ExtractZipAsync(string zipPath, string pathDst)
+        public static ZipAsyncOperation ExtractZipAsync(string zipPath, string pathDst)
         {
-            Thread thread = new Thread(() => ExtractZip(zipPath, pathDst));
-            return new WaitForThread(thread);
+            ZipAsyncOperation op = new ZipAsyncOperation();
+
+            Thread thread = new Thread
+            (
+                () =>
+                {
+                    ExtractZip(zipPath, pathDst);
+                    op._isDone = true;
+                }
+            );
+            thread.Start();
+
+            return op;
         }
 
         /// <summary>
@@ -159,19 +193,20 @@ namespace QuickVR
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        public static ZipAsyncOperation ExtractZipAsync(byte[] data)
+        public static ZipAsyncOperation<byte[]> ExtractZipAsync(byte[] data)
         {
-            ZipAsyncOperation result = new ZipAsyncOperation();
-            Thread thread = new Thread(() => ExtractZipAsync(data, result));
+            ZipAsyncOperation<byte[]> op = new ZipAsyncOperation<byte[]>();
+
+            Thread thread = new Thread
+            (
+                () =>
+                {
+                    op._result = ExtractZip(data);
+                }
+            );
             thread.Start();
 
-            return result;
-        }
-
-        private static void ExtractZipAsync(byte[] data, ZipAsyncOperation result)
-        {
-            result._data = ExtractZip(data);
-            result._isDone = true;
+            return op;
         }
 
         /// <summary>
@@ -228,10 +263,39 @@ namespace QuickVR
 
 }
 
+public class ZipAsyncOperation<T> : ZipAsyncOperation
+{
+
+    #region PUBLIC ATTRIBUTES
+
+    public T _result
+    {
+        get
+        {
+            return m_Result;
+        }
+
+        set
+        {
+            m_Result = value;
+            _isDone = true;
+        }
+    }
+    protected T m_Result;
+
+    #endregion
+
+}
+
 public class ZipAsyncOperation : CustomYieldInstruction
 {
 
     #region PUBLIC ATTRIBUTES
+
+    public bool _isDone
+    {
+        get; set;
+    }
 
     public override bool keepWaiting
     {
@@ -239,42 +303,6 @@ public class ZipAsyncOperation : CustomYieldInstruction
         {
             return !_isDone;
         }
-    }
-
-    public bool _isDone = false;
-    public byte[] _data = null;
-
-    #endregion
-
-}
-
-public class WaitForThread : CustomYieldInstruction
-{
-
-    #region PUBLIC ATTRIUBTES
-
-    public override bool keepWaiting
-    {
-        get
-        {
-            return _thread.IsAlive;
-        }
-    }
-
-    #endregion
-
-    #region PROTECTED ATTRIBUTES
-
-    protected Thread _thread = null;
-
-    #endregion
-
-    #region CREATION AND DESTRUCTION
-
-    public WaitForThread(Thread thread)
-    {
-        _thread = thread;
-        _thread.Start();
     }
 
     #endregion
